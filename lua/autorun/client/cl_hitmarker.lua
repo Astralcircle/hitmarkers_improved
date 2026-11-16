@@ -15,6 +15,7 @@ HITMARKERS_IMPROVED.CVARS = {
     markersSpreadSpeed = CreateClientConVar( "hitmarkers_spread_speed" , "0", true, true, "spread speed of hitmarkers"),
     markersColor = CreateClientConVar( "hitmarkers_color" , "255 255 255", true, true, "color of hitmarkers in RGB format"),
     markersHeadshotColor = CreateClientConVar( "hitmarkers_headshot_color" , "255 255 255", true, true, "color of headshot hitmarkers in RGB format"),
+    markersKillColor = CreateClientConVar( "hitmarkers_kill_color" , "255 0 0", true, true, "color of kill hitmarkers in RGB format"),
     markersVolume = CreateClientConVar( "hitmarkers_volume" , "1", true, true, "volume of hitmarkers"),
     markersSound = CreateClientConVar( "hitmarkers_sound" , "hitmarkers_improved/hitmarker.ogg", true, true, "sound of hitmarkers"),
     markersHeadSound = CreateClientConVar( "hitmarkers_head_sound" , "hitmarkers_improved/hitmarker_head.ogg", true, true, "sound of headshot hitmarkers"),
@@ -138,39 +139,40 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local spacing = HITMARKERS_IMPROVED.CVARS.markersSpacing:GetFloat()
     local rotSpeed = HITMARKERS_IMPROVED.CVARS.markersRotSpeed:GetFloat()
     local spreadSpeed = HITMARKERS_IMPROVED.CVARS.markersSpreadSpeed:GetFloat()
-    local color = HITMARKERS_IMPROVED.CVARS.markersColor:GetString()
-    local headshotColor = HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString()
-
-    local r, g, b = string.match( color, "(%d+) (%d+) (%d+)" )
-    r, g, b = tonumber( r ), tonumber( g ), tonumber( b )
-
-    local headR, headG, headB = string.match( headshotColor, "(%d+) (%d+) (%d+)" )
-    headR, headG, headB = tonumber( headR ), tonumber( headG ), tonumber( headB )
+    local color = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() )
+    local headshotColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() )
+    local killColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() )
 
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
         local hadArmor = markerData.hadArmor and HITMARKERS_IMPROVED.CVARS.armorEnabled:GetBool()
         local showHeadshot = markerData.headshot and not hadArmor
+        local death = markerData.death
 
         if hadArmor then
             surface.SetDrawColor( 0, 127, 255, markerData.life * 255 )
         else
-            surface.SetDrawColor( r, g, b, markerData.life * 255 )
+            surface.SetDrawColor( color.r, color.g, color.b, markerData.life * 255 )
         end
 
         if showHeadshot then
             surface.SetMaterial( headshotHitmarkerInsideMat )
-            surface.SetDrawColor( headR, headG, headB, markerData.life * 255 )
+            surface.SetDrawColor( headshotColor.r, headshotColor.g, headshotColor.b, markerData.life * 255 )
         else
             surface.SetMaterial( basicHitmarkerMat )
         end
+
+        if death then
+            surface.SetDrawColor( killColor.r, killColor.g, killColor.b, markerData.life * 255 )
+        end
+
         -- Marker Drawing --
         for a = 0, count do
             if a == 0 then continue end
             local ang = a * 360 / count + angleOffset + markerData.angle
             local x, y = math.cos( ang * DEG2RAD ), math.sin( ang * DEG2RAD )
 
-            if markerData.death then
+            if death then
                 local offX, offY = math.cos( ( ang + 90 ) * DEG2RAD ), math.sin( ( ang + 90 ) * DEG2RAD )
 
                 local sideSpacing = width * 0.05

@@ -17,7 +17,7 @@ local function OpenHitmarkersMenu(icon, window)
     if IsValid( last_menu ) then last_menu:Close() end
 
     window = vgui.Create( "DFrame" )
-    window:SetSize( ScrW() * 0.5, ScrH() * 0.9 )
+    window:SetSize( ScrW() * 0.3, ScrH() * 0.9 )
     window:Center()
     window:SetTitle("Hitmarker Settings")
     window:SetSizable(true)
@@ -49,6 +49,7 @@ local function OpenHitmarkersMenu(icon, window)
         ["hitmarkers_spread_speed"] = 0,
         ["hitmarkers_color"] = "255 255 255",
         ["hitmarkers_headshot_color"] = "255 0 0",
+        ["hitmarkers_kill_color"] = "255 0 0",
 
         ["hitmarkers_volume"] = 1,
         ["hitmarkers_sound"] = "hitmarkers_improved/hitmarker.ogg",
@@ -78,30 +79,31 @@ local function OpenHitmarkersMenu(icon, window)
 
     local markerColorMixer = vgui.Create( "DColorMixer", pan )
     markerColorMixer:Dock( TOP )
-    markerColorMixer:DockMargin(10, 10, 20, 20)
+    markerColorMixer:DockMargin( 10, 10, 20, 0 )
     markerColorMixer:SetLabel("Basic Color")
 
     local headshotMarkerColorMixer = vgui.Create( "DColorMixer", pan )
     headshotMarkerColorMixer:Dock( TOP )
-    headshotMarkerColorMixer:DockMargin(10, 0, 20, 0)
+    headshotMarkerColorMixer:DockMargin(10, 10, 20, 0)
     headshotMarkerColorMixer:SetLabel("Headshot Color")
+
+    local killMarkerColorMixer = vgui.Create( "DColorMixer", pan )
+    killMarkerColorMixer:Dock( TOP )
+    killMarkerColorMixer:DockMargin( 10, 10, 20, 0 )
+    killMarkerColorMixer:SetLabel("Kill Color")
 
     local _onSelect = presetPanel.OnSelect -- Call original function first.
     function presetPanel:OnSelect( id, value, data )
         _onSelect( self, id, value, data )
         if not data then return end
-        if not data.hitmarkers_color then return end
-        local r, g, b = string.match( data.hitmarkers_color, "(%d+) (%d+) (%d+)" )
-        local headR, headG, headB = string.match( data.hitmarkers_headshot_color, "(%d+) (%d+) (%d+)" )
-        markerColorMixer:SetColor( Color( r, g, b ) )
-        headshotMarkerColorMixer:SetColor( Color( headR, headG, headB ) )
+        markerColorMixer:SetColor( string.ToColor( data.hitmarkers_color ) )
+        headshotMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_headshot_color ) )
+        killMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_kill_color ) )
     end
 
-    local r, g, b = string.match( HITMARKERS_IMPROVED.CVARS.markersColor:GetString(), "(%d+) (%d+) (%d+)" )
-    markerColorMixer:SetColor( Color( r, g, b ) )
-
-    local headR, headG, headB = string.match( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString(), "(%d+) (%d+) (%d+)" )
-    headshotMarkerColorMixer:SetColor( Color( headR, headG, headB ) )
+    markerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() ) )
+    headshotMarkerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() ) )
+    killMarkerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() ) )
 
     function markerColorMixer:ValueChanged( color )
         local r, g, b = color.r, color.g, color.b
@@ -111,6 +113,11 @@ local function OpenHitmarkersMenu(icon, window)
     function headshotMarkerColorMixer:ValueChanged( color )
         local r, g, b = color.r, color.g, color.b
         RunConsoleCommand( "hitmarkers_headshot_color", r .. " " .. g .. " " .. b )
+    end
+
+    function killMarkerColorMixer:ValueChanged( color )
+        local r, g, b = color.r, color.g, color.b
+        RunConsoleCommand( "hitmarkers_kill_color", r .. " " .. g .. " " .. b )
     end
 
     DividerLabel( pan, "Armor Icon Settings" )
@@ -127,9 +134,9 @@ local function OpenHitmarkersMenu(icon, window)
 
     pan:NumSlider( "Volume", "hitmarkers_volume", 0, 2, 2 )
 
-    local hitmarkerSoundEntry = pan:TextEntry( "Basic Sound", "hitmarkers_sound" )
-    local hitmarkerHeadSoundEntry = pan:TextEntry( "Headshot Sound", "hitmarkers_head_sound" )
-    local hitmarkerKillSoundEntry = pan:TextEntry( "Kill Sound", "hitmarkers_kill_sound" )
+    pan:TextEntry( "Basic Sound", "hitmarkers_sound" )
+    pan:TextEntry( "Headshot Sound", "hitmarkers_head_sound" )
+    pan:TextEntry( "Kill Sound", "hitmarkers_kill_sound" )
 
     local lastSound = nil
 
