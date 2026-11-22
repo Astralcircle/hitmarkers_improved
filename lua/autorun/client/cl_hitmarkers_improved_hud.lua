@@ -26,22 +26,21 @@ HITMARKERS_IMPROVED.CVARS = {
     fontSize = CreateClientConVar( "hitmarkers_fontsize" , "0", true, true, "size of the damage text" ),
 }
 
-surface.CreateFont("hitmarkers_improved_markerfont", {
-        font = "Oxanium ExtraLight",
-        weight = 300,
-        size = ScreenScaleH(8)
-    })
-
-cvars.AddChangeCallback("hitmarkers_fontsize", function(_, oldValue, newValue)
-    local n = tonumber(newValue)
-    if not n then return end
+local function CreateMarkerFont()
+    local n = HITMARKERS_IMPROVED.CVARS.fontSize:GetFloat()
+    if n <= 0 then n = 8 end
 
     surface.CreateFont("hitmarkers_improved_markerfont", {
         font = "Oxanium ExtraLight",
         weight = 300,
         size = ScreenScaleH(n)
     })
-end)
+end
+
+CreateMarkerFont()
+
+cvars.AddChangeCallback("hitmarkers_fontsize", CreateMarkerFont, "HitmarkersImprovedFont")
+hook.Add("OnScreenSizeChanged", "HitmarkersImprovedFont", CreateMarkerFont)
 
 
 local DEG2RAD = math.pi / 180
@@ -109,7 +108,23 @@ net.Receive("hitmarkers_improved_hit", function()
 
     AddDamageNumber(dmgTook, entID, death)
 
-    if dmgFrame == FrameNumber() then return end
+    -- Multiple hits in one frame (shotgun pellets): merge into the last marker
+    -- so a kill/headshot from a later pellet isn't lost.
+    if dmgFrame == FrameNumber() then
+        local last = markerHistory[#markerHistory]
+        if last then
+            if death and not last.death then
+                playSound( HITMARKERS_IMPROVED.CVARS.markersKillSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+            elseif headshot and not last.headshot and not last.death then
+                playSound( HITMARKERS_IMPROVED.CVARS.markersHeadSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+            end
+            last.dmgTook = last.dmgTook + dmgTook
+            last.death = last.death or death
+            last.headshot = last.headshot or headshot
+            last.hadArmor = last.hadArmor or hadArmor
+        end
+        return
+    end
 
     if death then
         playSound( HITMARKERS_IMPROVED.CVARS.markersKillSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
