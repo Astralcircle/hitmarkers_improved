@@ -35,7 +35,7 @@ surface.CreateFont("hitmarkers_improved_markerfont", {
 cvars.AddChangeCallback("hitmarkers_fontsize", function(_, oldValue, newValue)
     local n = tonumber(newValue)
     if not n then return end
-    
+
     surface.CreateFont("hitmarkers_improved_markerfont", {
         font = "Oxanium ExtraLight",
         weight = 300,
@@ -182,20 +182,21 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
         local hadArmor = markerData.hadArmor and HITMARKERS_IMPROVED.CVARS.armorEnabled:GetBool()
-        local showHeadshot = markerData.headshot and not hadArmor
+        local showHeadshot = markerData.headshot
         local death = markerData.death
 
         local alpha = math.ease.OutQuint(markerData.life) * 255
 
         if hadArmor then
             surface.SetDrawColor( 0, 127, 255, alpha )
+        elseif showHeadshot then
+            surface.SetDrawColor( headshotColor.r, headshotColor.g, headshotColor.b, alpha )
         else
             surface.SetDrawColor( color.r, color.g, color.b, alpha )
         end
 
         if showHeadshot then
             surface.SetMaterial( headshotHitmarkerInsideMat )
-            surface.SetDrawColor( headshotColor.r, headshotColor.g, headshotColor.b, alpha )
         else
             surface.SetMaterial( basicHitmarkerMat )
         end
@@ -243,7 +244,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
                 )
             end
 
-            
+
         end
 
         -- Armor Drawing --
@@ -282,9 +283,9 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         else
             surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
         end
-        
+
         local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
-        
+
         surface.SetTextPos( scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset )
         surface.DrawText( tostring( dmgNumber.dmg ) )
 
@@ -296,14 +297,6 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             table.remove( dmgNumTable, i )
         end
     end
-
-    
-
-    
-
-    
-
-    
 
     dmgAccumLife = dmgAccumLife - FrameTime() / HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat() * 0.25
 
