@@ -1,48 +1,58 @@
-local hadArmor = false
+resource.AddWorkshop( "3824846324" )
+
+util.AddNetworkString( "hitmarkers_improved_hit" )
+
+local npcHeadshot = false
 local preHealth = 0
-local headshot = false
 local tookEnt = nil
+local hadArmor = false
 
-util.AddNetworkString("HitmarkersImproved.Hit")
-
---- Check if it's a headshot
-local function ScaleDamage( _, hitgroup, _ )
-    if hitgroup == HITGROUP_HEAD then
-        headshot = true
-    else
-        headshot = false
-    end
+local function IsSentient( ent )
+    return ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot()
 end
 
-hook.Add("ScaleNPCDamage", "HitmarkersImprovedNPCDMG", ScaleDamage )
-hook.Add("ScalePlayerDamage", "HitmarkersImprovedPlayerDMG", ScaleDamage )
-
-hook.Add( "EntityTakeDamage", "identifier", function(target, dmg)
-    tookEnt = target
-    preHealth = target:Health()
-    hadArmor = target:IsPlayer() and target:Armor()
+hook.Add( "ScaleNPCDamage", "HitmarkersImprovedNPCDMG", function( _, hitgroup )
+    npcHeadshot = hitgroup == HITGROUP_HEAD
 end )
 
-hook.Add( "PostEntityTakeDamage", "identifier", function(target, dmginfo)
-    if target ~= tookEnt then return end
-    if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
+hook.Add( "EntityTakeDamage", "HitmarkersImproved", function( ent )
+    if not IsSentient( ent ) then return end
 
-    local attacker = dmginfo:GetAttacker()
-    if not attacker:IsPlayer() then return end
-    local newHealth = target:Health()
-    local dmgTook = preHealth - newHealth
+    tookEnt = ent
+    preHealth = ent:Health()
+    hadArmor = ent:IsPlayer() and ent:Armor() > 0
+end )
 
-    death = newHealth <= 0
+hook.Add( "PostEntityTakeDamage", "HitmarkersImproved", function( ent, dmginfo, took )
+    if not took then return end
+    if tookEnt ~= ent then return end
+    if not IsSentient( ent ) then return end
 
+    local currentHealth = math.max( ent:Health(), 0 )
+    local dmgTook = preHealth - currentHealth
     if dmgTook <= 0 then return end
 
-    net.Start("HitmarkersImproved.Hit")
-    net.WriteUInt( dmgTook, 16 )
-    net.WriteBool( headshot )
-    net.WriteBool( death )
-    net.WriteBool( hadArmor )
-    net.WriteUInt( target:EntIndex(), 16 )
+    local attacker = dmginfo:GetAttacker()
+    if not IsValid( attacker ) then return end
+    if attacker:IsVehicle() and IsValid( attacker:GetDriver() ) then attacker = attacker:GetDriver() end
+    if not attacker:IsPlayer() then return end
+
+    local inflictor = dmginfo:GetInflictor()
+    if inflictor == ent or attacker == ent then return end
+
+    local isHeadshot
+    if ent:IsPlayer() then
+        isHeadshot = ent:LastHitGroup() == HITGROUP_HEAD
+    else
+        isHeadshot = npcHeadshot
+    end
+    npcHeadshot = false
+
+    net.Start( "hitmarkers_improved_hit", true )
+    net.WriteUInt( math.min( math.ceil( dmgTook ), 65535 ), 16 )
+    net.WriteBool( isHeadshot )
+    net.WriteBool( currentHealth <= 0 )
+    net.WriteBool( ent:IsPlayer() and hadArmor or false )
+    net.WriteUInt( ent:EntIndex(), 16 )
     net.Send( attacker )
 end )
-
-resource.AddWorkshop("3824846324")

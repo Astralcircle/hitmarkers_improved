@@ -98,7 +98,7 @@ local function AddDamageNumber(dmg, entID, death)
     end
 end
 
-net.Receive("HitmarkersImproved.Hit", function()
+net.Receive("hitmarkers_improved_hit", function()
     local dmgTook = net.ReadUInt( 16 )
     local headshot = net.ReadBool()
     local death = net.ReadBool()
