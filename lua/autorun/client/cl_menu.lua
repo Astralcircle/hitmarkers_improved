@@ -41,14 +41,14 @@ local function OpenHitmarkersMenu(icon, window)
     local presetPanel = pan:ToolPresets( "hitmarkers_presets", {
         ["hitmarkers_count"] = 4,
         ["hitmarkers_offset_angle"] = 45,
-        ["hitmarkers_lifetime"] = 0.3,
+        ["hitmarkers_lifetime"] = 0.5,
         ["hitmarkers_length"] = 20,
         ["hitmarkers_width"] = 60,
         ["hitmarkers_spacing"] = 10,
         ["hitmarkers_rotation_speed"] = 0,
         ["hitmarkers_spread_speed"] = 0,
         ["hitmarkers_color"] = "255 255 255",
-        ["hitmarkers_headshot_color"] = "255 0 0",
+        ["hitmarkers_headshot_color"] = "255 255 255",
         ["hitmarkers_kill_color"] = "255 0 0",
 
         ["hitmarkers_volume"] = 1,

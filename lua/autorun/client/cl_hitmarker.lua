@@ -65,13 +65,49 @@ local dmgAccumLife = 0
 
 local dmgFrame = 0
 
+local dmgNumTable = {}
+
+local function GetDamageNumber(entID)
+    for i = #dmgNumTable, 1, -1 do
+        if dmgNumTable[i].entID == entID then
+            return dmgNumTable[i]
+        end
+    end
+end
+
+local function AddDamageNumber(dmg, entID, death)
+    if #dmgNumTable > 6 and dmgNumTable[#dmgNumTable] then
+        dmgNumTable[#dmgNumTable].shouldRemove = true
+    end
+
+    local oldNumber = GetDamageNumber(entID)
+
+
+    if oldNumber then
+        oldNumber.life = 1
+        oldNumber.dmg = oldNumber.dmg + dmg
+        oldNumber.death = death
+    else
+        table.insert( dmgNumTable, 1, {
+            entID = entID,
+            dmg = dmg,
+            death = death,
+            life = 1,
+            shouldRemove = false
+        } )
+    end
+end
+
 net.Receive("HitmarkersImproved.Hit", function()
     local dmgTook = net.ReadUInt( 16 )
     local headshot = net.ReadBool()
     local death = net.ReadBool()
     local hadArmor = net.ReadBool()
+    local entID = net.ReadUInt(16)
 
     dmgAccumulated = dmgAccumulated + dmgTook
+
+    AddDamageNumber(dmgTook, entID, death)
 
     if dmgFrame == FrameNumber() then return end
 
@@ -149,21 +185,23 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         local showHeadshot = markerData.headshot and not hadArmor
         local death = markerData.death
 
+        local alpha = math.ease.OutQuint(markerData.life) * 255
+
         if hadArmor then
-            surface.SetDrawColor( 0, 127, 255, markerData.life * 255 )
+            surface.SetDrawColor( 0, 127, 255, alpha )
         else
-            surface.SetDrawColor( color.r, color.g, color.b, markerData.life * 255 )
+            surface.SetDrawColor( color.r, color.g, color.b, alpha )
         end
 
         if showHeadshot then
             surface.SetMaterial( headshotHitmarkerInsideMat )
-            surface.SetDrawColor( headshotColor.r, headshotColor.g, headshotColor.b, markerData.life * 255 )
+            surface.SetDrawColor( headshotColor.r, headshotColor.g, headshotColor.b, alpha )
         else
             surface.SetMaterial( basicHitmarkerMat )
         end
 
         if death then
-            surface.SetDrawColor( killColor.r, killColor.g, killColor.b, markerData.life * 255 )
+            surface.SetDrawColor( killColor.r, killColor.g, killColor.b, alpha )
         end
 
         -- Marker Drawing --
@@ -172,7 +210,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             local ang = a * 360 / count + angleOffset + markerData.angle
             local x, y = math.cos( ang * DEG2RAD ), math.sin( ang * DEG2RAD )
 
-            if death then
+            if showHeadshot then
                 local offX, offY = math.cos( ( ang + 90 ) * DEG2RAD ), math.sin( ( ang + 90 ) * DEG2RAD )
 
                 local sideSpacing = width * 0.05
@@ -210,7 +248,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
 
         -- Armor Drawing --
         if hadArmor then
-            surface.SetDrawColor( 0, 127, 255, 255 * markerData.life )
+            surface.SetDrawColor( 0, 127, 255, alpha )
             surface.SetMaterial( armorMat )
             surface.DrawTexturedRectRotated(
                 scrW * 0.5 + HITMARKERS_IMPROVED.CVARS.armorX:GetFloat() * scrW * 0.5,
@@ -234,14 +272,40 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     draw.NoTexture()
     surface.SetFont( "hitmarkers_improved_markerfont" )
 
-    surface.SetTextColor( 255, 0, 0, 255 * dmgAccumLife )
+    local dmgYOffset = 0
+    for i = #dmgNumTable, 1, -1 do
+        local dmgNumber = dmgNumTable[i]
+        local death = dmgNumber.death
+        local dmgAlpha = math.Remap( 1 - ( 1 - dmgNumber.life )^10, 0.8, 1, 0, 1 ) * 255
+        if death then
+            surface.SetTextColor( killColor.r, killColor.g, killColor.b, dmgAlpha )
+        else
+            surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
+        end
+        
+        local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
+        
+        surface.SetTextPos( scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset )
+        surface.DrawText( tostring( dmgNumber.dmg ) )
 
-    local textW, textH = surface.GetTextSize( tostring( dmgAccumulated ) )
+        dmgYOffset = dmgYOffset + textH * ( 1 - ( 1 - dmgNumber.life )^10 )
 
-    surface.SetTextPos( scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 )
-    surface.DrawText( tostring( dmgAccumulated ) )
+        dmgNumber.life = math.max( 0, dmgNumber.life - FrameTime() * ( dmgNumber.shouldRemove and 2 or 0.5 ) )
 
-    dmgAccumLife = dmgAccumLife - FrameTime() / HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat()
+        if dmgNumber.life <= 0 then
+            table.remove( dmgNumTable, i )
+        end
+    end
+
+    
+
+    
+
+    
+
+    
+
+    dmgAccumLife = dmgAccumLife - FrameTime() / HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat() * 0.25
 
     if dmgAccumLife <= 0 then
         dmgAccumulated = 0

@@ -41,6 +41,7 @@ hook.Add( "PostEntityTakeDamage", "identifier", function(target, dmginfo)
     net.WriteBool( headshot )
     net.WriteBool( death )
     net.WriteBool( hadArmor )
+    net.WriteUInt( target:EntIndex(), 16 )
     net.Send( attacker )
 end )
 
