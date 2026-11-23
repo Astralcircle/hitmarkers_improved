@@ -59,9 +59,6 @@ local function playSound( soundPath, volume )
 end
 
 
-local dmgAccumulated = 0
-local dmgAccumLife = 0
-
 local dmgFrame = 0
 
 local dmgNumTable = {}
@@ -104,8 +101,6 @@ net.Receive("hitmarkers_improved_hit", function()
     local hadArmor = net.ReadBool()
     local entID = net.ReadUInt(16)
 
-    dmgAccumulated = dmgAccumulated + dmgTook
-
     AddDamageNumber(dmgTook, entID, death)
 
     -- Multiple hits in one frame (shotgun pellets): merge into the last marker
@@ -118,7 +113,6 @@ net.Receive("hitmarkers_improved_hit", function()
             elseif headshot and not last.headshot and not last.death then
                 playSound( HITMARKERS_IMPROVED.CVARS.markersHeadSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
             end
-            last.dmgTook = last.dmgTook + dmgTook
             last.death = last.death or death
             last.headshot = last.headshot or headshot
             last.hadArmor = last.hadArmor or hadArmor
@@ -139,7 +133,6 @@ net.Receive("hitmarkers_improved_hit", function()
     end
 
     table.insert( markerHistory, {
-        dmgTook = dmgTook,
         headshot = headshot,
         hadArmor = hadArmor,
         death = death,
@@ -150,7 +143,6 @@ net.Receive("hitmarkers_improved_hit", function()
         lifetime = HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat(),
     } )
 
-    dmgAccumLife = 1
     dmgFrame = FrameNumber()
 end )
 
@@ -210,19 +202,12 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             surface.SetDrawColor( color.r, color.g, color.b, alpha )
         end
 
-        if showHeadshot then
-            surface.SetMaterial( headshotHitmarkerInsideMat )
-        else
-            surface.SetMaterial( basicHitmarkerMat )
-        end
-
         if death then
             surface.SetDrawColor( killColor.r, killColor.g, killColor.b, alpha )
         end
 
         -- Marker Drawing --
-        for a = 0, count do
-            if a == 0 then continue end
+        for a = 1, count do
             local ang = a * 360 / count + angleOffset + markerData.angle
             local x, y = math.cos( ang * DEG2RAD ), math.sin( ang * DEG2RAD )
 
@@ -311,11 +296,5 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         if dmgNumber.life <= 0 then
             table.remove( dmgNumTable, i )
         end
-    end
-
-    dmgAccumLife = dmgAccumLife - FrameTime() / HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat() * 0.25
-
-    if dmgAccumLife <= 0 then
-        dmgAccumulated = 0
     end
 end)
