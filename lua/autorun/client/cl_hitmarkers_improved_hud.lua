@@ -23,7 +23,7 @@ HITMARKERS_IMPROVED.CVARS = {
     armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled" , "1", true, true, "enable/disable armor symbol"),
     armorX = CreateClientConVar( "hitmarkers_armor_x" , "-0.05", true, true, "x offset of armor symbol" ),
     armorY = CreateClientConVar( "hitmarkers_armor_y" , "0", true, true, "y offset of armor symbol" ),
-    fontSize = CreateClientConVar( "hitmarkers_fontsize" , "0", true, true, "size of the damage text" ),
+    fontSize = CreateClientConVar( "hitmarkers_fontsize" , "8", true, true, "size of the damage text" ),
 }
 
 local function CreateMarkerFont()
@@ -99,7 +99,7 @@ net.Receive("hitmarkers_improved_hit", function()
     local headshot = net.ReadBool()
     local death = net.ReadBool()
     local hadArmor = net.ReadBool()
-    local entID = net.ReadUInt(16)
+    local entID = net.ReadUInt(4) -- per-attacker target slot, must match SLOT_BITS on the server
 
     AddDamageNumber(dmgTook, entID, death)
 
