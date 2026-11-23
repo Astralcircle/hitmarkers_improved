@@ -39,6 +39,9 @@ local function OpenHitmarkersMenu(icon, window)
     pan:SetHeaderHeight(0)
 
     local presetPanel = pan:ToolPresets( "hitmarkers_presets", {
+        ["hitmarkers_enabled"] = 1,
+        ["hitmarkers_oneonly"] = 1,
+
         ["hitmarkers_count"] = 4,
         ["hitmarkers_offset_angle"] = 45,
         ["hitmarkers_lifetime"] = 0.5,
@@ -56,10 +59,11 @@ local function OpenHitmarkersMenu(icon, window)
         ["hitmarkers_head_sound"] = "hitmarkers_improved/hitmarker_head.ogg",
         ["hitmarkers_kill_sound"] = "hitmarkers_improved/hitmarker_kill.ogg",
 
+        ["hitmarkers_armor_enabled"] = 1,
         ["hitmarkers_armor_x"] = -0.05,
         ["hitmarkers_armor_y"] = 0,
 
-        ["hitmarkers_fontsize"] = 14,
+        ["hitmarkers_fontsize"] = 8,
     } )
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
