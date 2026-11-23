@@ -3,27 +3,27 @@ local markerHistory = {}
 HITMARKERS_IMPROVED = HITMARKERS_IMPROVED or {}
 
 HITMARKERS_IMPROVED.CVARS = {
-    markersEnabled = CreateClientConVar( "hitmarkers_enabled" , "1", true, true, "enable/disable hitmarkers"),
-    markersOneOnly = CreateClientConVar( "hitmarkers_oneonly" , "1", true, true, "show only one hitmarker at a time"),
-    markersOffsetAngle = CreateClientConVar( "hitmarkers_offset_angle" , "45", true, true, "offset angle of hitmarkers in degrees"),
-    markersCount = CreateClientConVar( "hitmarkers_count" , "4", true, true, "number of hitmarkers to show around the crosshair", 1, 360 ),
-    markersLifetime = CreateClientConVar( "hitmarkers_lifetime" , "0.5", true, true, "lifetime of hitmarkers in seconds"),
-    markersLength = CreateClientConVar( "hitmarkers_length" , "20", true, true, "length of hitmarkers"),
-    markersWidth = CreateClientConVar( "hitmarkers_width" , "60", true, true, "width of hitmarkers"),
-    markersSpacing = CreateClientConVar( "hitmarkers_spacing" , "10", true, true, "spacing of hitmarkers"),
-    markersRotSpeed = CreateClientConVar( "hitmarkers_rotation_speed" , "0", true, true, "rotation speed of hitmarkers"),
-    markersSpreadSpeed = CreateClientConVar( "hitmarkers_spread_speed" , "0", true, true, "spread speed of hitmarkers"),
-    markersColor = CreateClientConVar( "hitmarkers_color" , "255 255 255", true, true, "color of hitmarkers in RGB format"),
-    markersHeadshotColor = CreateClientConVar( "hitmarkers_headshot_color" , "255 255 255", true, true, "color of headshot hitmarkers in RGB format"),
-    markersKillColor = CreateClientConVar( "hitmarkers_kill_color" , "255 0 0", true, true, "color of kill hitmarkers in RGB format"),
-    markersVolume = CreateClientConVar( "hitmarkers_volume" , "1", true, true, "volume of hitmarkers"),
-    markersSound = CreateClientConVar( "hitmarkers_sound" , "hitmarkers_improved/hitmarker.ogg", true, true, "sound of hitmarkers"),
-    markersHeadSound = CreateClientConVar( "hitmarkers_head_sound" , "hitmarkers_improved/hitmarker_head.ogg", true, true, "sound of headshot hitmarkers"),
-    markersKillSound = CreateClientConVar( "hitmarkers_kill_sound" , "hitmarkers_improved/hitmarker_kill.ogg", true, true, "sound of kill hitmarkers"),
-    armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled" , "1", true, true, "enable/disable armor symbol"),
-    armorX = CreateClientConVar( "hitmarkers_armor_x" , "-0.05", true, true, "x offset of armor symbol" ),
-    armorY = CreateClientConVar( "hitmarkers_armor_y" , "0", true, true, "y offset of armor symbol" ),
-    fontSize = CreateClientConVar( "hitmarkers_fontsize" , "8", true, true, "size of the damage text" ),
+    markersEnabled = CreateClientConVar( "hitmarkers_enabled", "1", true, false, "enable/disable hitmarkers"),
+    markersOneOnly = CreateClientConVar( "hitmarkers_oneonly", "1", true, false, "show only one hitmarker at a time"),
+    markersOffsetAngle = CreateClientConVar( "hitmarkers_offset_angle", "45", true, false, "offset angle of hitmarkers in degrees"),
+    markersCount = CreateClientConVar( "hitmarkers_count", "4", true, false, "number of hitmarkers to show around the crosshair", 1, 360 ),
+    markersLifetime = CreateClientConVar( "hitmarkers_lifetime", "0.5", true, false, "lifetime of hitmarkers in seconds"),
+    markersLength = CreateClientConVar( "hitmarkers_length", "20", true, false, "length of hitmarkers"),
+    markersWidth = CreateClientConVar( "hitmarkers_width", "60", true, false, "width of hitmarkers"),
+    markersSpacing = CreateClientConVar( "hitmarkers_spacing", "10", true, false, "spacing of hitmarkers"),
+    markersRotSpeed = CreateClientConVar( "hitmarkers_rotation_speed", "0", true, false, "rotation speed of hitmarkers"),
+    markersSpreadSpeed = CreateClientConVar( "hitmarkers_spread_speed", "0", true, false, "spread speed of hitmarkers"),
+    markersColor = CreateClientConVar( "hitmarkers_color", "255 255 255", true, false, "color of hitmarkers in RGB format"),
+    markersHeadshotColor = CreateClientConVar( "hitmarkers_headshot_color", "255 255 255", true, false, "color of headshot hitmarkers in RGB format"),
+    markersKillColor = CreateClientConVar( "hitmarkers_kill_color", "255 0 0", true, false, "color of kill hitmarkers in RGB format"),
+    markersVolume = CreateClientConVar( "hitmarkers_volume", "1", true, false, "volume of hitmarkers"),
+    markersSound = CreateClientConVar( "hitmarkers_sound", "hitmarkers_improved/hitmarker.ogg", true, false, "sound of hitmarkers"),
+    markersHeadSound = CreateClientConVar( "hitmarkers_head_sound", "hitmarkers_improved/hitmarker_head.ogg", true, false, "sound of headshot hitmarkers"),
+    markersKillSound = CreateClientConVar( "hitmarkers_kill_sound", "hitmarkers_improved/hitmarker_kill.ogg", true, false, "sound of kill hitmarkers"),
+    armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled", "1", true, false, "enable/disable armor symbol"),
+    armorX = CreateClientConVar( "hitmarkers_armor_x", "-0.05", true, false, "x offset of armor symbol" ),
+    armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
+    fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
 }
 
 local function CreateMarkerFont()
@@ -50,7 +50,7 @@ local headshotHitmarkerInsideMat = Material( "hitmarkers_improved/hitmarker_insi
 local armorMat = Material( "hitmarkers_improved/armor_symbol.png"  )
 
 local function playSound( soundPath, volume )
-    sound.PlayFile( "sound/" .. soundPath , "noplay noblock", function( obj )
+    sound.PlayFile( "sound/" .. soundPath, "noplay noblock", function( obj )
         if IsValid( obj ) then
             obj:SetVolume( volume )
             obj:Play()
